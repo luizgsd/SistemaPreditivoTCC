@@ -1,0 +1,14 @@
+# === Core de Data Science ===
+numpy==1.21.6
+scipy
+
+# === Machine Learning ===
+tensorflow
+
+# === Big Data / Processamento ===
+pyspark
+findspark
+
+# === Futuro: API e Dashboard (Deixe preparado) ===
+fastapi
+uvicorn
