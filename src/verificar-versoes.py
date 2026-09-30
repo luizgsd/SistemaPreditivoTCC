@@ -6,27 +6,25 @@ import scipy
 import tensorflow as tf
 import findspark
 
-# Inicializa o buscador do Spark
 findspark.init()
 
 print("="*40)
-print(" 🛡️ DIAGNÓSTICO DO AMBIENTE DO TCC 🛡️")
+print("DIAGNÓSTICO DO AMBIENTE DO TCC")
 print("="*40)
 
-print(f"🐍 Python     : {sys.version.split(' ')[0]}")
-print(f"🔢 NumPy      : {np.__version__}")
-print(f"🧮 SciPy      : {scipy.__version__}")
-print(f"🧠 TensorFlow : {tf.__version__}")
-print(f"⚡ PySpark    : {pyspark.__version__}")
+print(f"Python     : {sys.version.split(' ')[0]}")
+print(f"NumPy      : {np.__version__}")
+print(f"SciPy      : {scipy.__version__}")
+print(f"TensorFlow : {tf.__version__}")
+print(f"PySpark    : {pyspark.__version__}")
 
-# Vamos criar uma sessão rápida do Spark apenas para checar se o Java está ok
 try:
     spark = SparkSession.builder.appName(
         "CheckEnv").master("local[*]").getOrCreate()
-    print(f"☕ Motor Spark: Rodando perfeitamente (Versão {spark.version})")
+    print(f"Motor Spark: Rodando perfeitamente (Versão {spark.version})")
     spark.stop()
 except Exception as e:
-    print("\n❌ Erro ao iniciar o motor do Spark (possível problema com o Java):")
+    print("\nErro ao iniciar o motor do Spark (possível problema com o Java):")
     print(e)
 
 print("="*40)
