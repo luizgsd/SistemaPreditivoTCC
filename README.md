@@ -65,6 +65,6 @@ streamlit run src/dashboard.py
 
 O painel de controle do sistema abrirá no seu navegador padrão, permitindo iniciar o monitoramento, visualizar métricas operacionais interativas e acompanhar as interceptações da rede neural em tempo real.
 
-A diferença entre os dois códigos de dashboard é unicamente o modo em que os pacotes são entregues para o modelo de IA analisar:
+A diferença entre os dois códigos de inicalização do dashboard é unicamente o modo em que os pacotes são entregues para o modelo de IA analisar:
 * No `dashboard_apresentacao.py` ocorre uma "roteirização" e embaralhamento nos pacotes com o intuito de fazer com que mais anomalias possam aparecer e, consequentemente, demonstrar todas as funcionalidades do sistema em um curto período de tempo.
 * No `dashboard.py` nenhuma das modificações citadas anteriormente acontecem e os pacotes são entregues na sua ordem original, o que resulta em longos períodos de tráfego normal e ataques esporádicos.
