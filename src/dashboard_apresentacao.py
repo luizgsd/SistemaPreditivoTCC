@@ -14,12 +14,12 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
 RAIZ_PROJETO = os.path.dirname(DIRETORIO_ATUAL)
 
-# 2. Carregamento do Modelo com Grafo e Sessão (À prova de falhas)
+#Carregamento do modelo
 @st.cache_resource 
 def carregar_modelo(tamanho_entrada):
     tf.keras.backend.clear_session()
     
-    # CRIA E FIXA UMA SESSÃO: O nosso "cofre" de variáveis matemáticas
+    #Cria e fixa uma sessão
     sessao = tf.compat.v1.Session()
     tf.compat.v1.keras.backend.set_session(sessao)
     
@@ -35,7 +35,6 @@ def carregar_modelo(tamanho_entrada):
     
     grafo = tf.compat.v1.get_default_graph()
     
-    # Agora retornamos 3 coisas: O modelo, o mapa e o cofre!
     return modelo, grafo, sessao
 
 @st.cache_data 
@@ -43,23 +42,16 @@ def carregar_dados():
     caminho_dados = os.path.join(RAIZ_PROJETO, 'data', 'processed', 'pacotes_para_apresentacao.csv')
     df_bruto = pd.read_csv(caminho_dados)
     
-    # Separa os tipos de tráfego e embaralha independentemente
+    #Separa os tipos de tráfego e embaralha
     df_normais = df_bruto[df_bruto['Label_Binario'] == 0].sample(frac=1, random_state=int(time.time()))
     df_ataques = df_bruto[df_bruto['Label_Binario'] == 1].sample(frac=1, random_state=int(time.time()))
     
-    # "Esteroides controlados": Limita os ataques a 10% do volume de tráfego normal
-    qtd_ataques = int(len(df_normais) * 0.10)
-    df_ataques = df_ataques.head(qtd_ataques)
-    
-    # Força os 10 primeiros pacotes a serem normais para o início da apresentação
-    df_inicio = df_normais.iloc[:10]
-    
-    # Mistura o restante de forma aleatória
-    df_resto = pd.concat([df_normais.iloc[10:], df_ataques]).sample(frac=1, random_state=int(time.time()))
-    
-    # Une as partes prontas para o simulador
-    df = pd.concat([df_inicio, df_resto]).reset_index(drop=True)
-    
+    qtd_ataques = int(len(df_normais) * 0.10) #Limita os ataques a 10% do volume de tráfego normal
+    df_ataques = df_ataques.head(qtd_ataques)   
+    df_inicio = df_normais.iloc[:10] #Força os 10 primeiros pacotes a serem normais
+    df_resto = pd.concat([df_normais.iloc[10:], df_ataques]).sample(frac=1, random_state=int(time.time())) #Mistura o restante de forma aleatória
+    df = pd.concat([df_inicio, df_resto]).reset_index(drop=True) #Une as partes prontas para o simulador
+
     X = df.drop(columns=['Label_Binario']).replace([np.inf, -np.inf], np.nan).fillna(0)
     y_real = df['Label_Binario'].values
     scaler = StandardScaler()
@@ -67,7 +59,6 @@ def carregar_dados():
     
     return df, X_scaled, y_real
 
-# 3. Memória Permanente do Streamlit
 if 'monitorando' not in st.session_state:
     st.session_state.monitorando = False
     st.session_state.indice_atual = 0
@@ -81,7 +72,7 @@ if 'monitorando' not in st.session_state:
 def alternar_monitoramento():
     st.session_state.monitorando = not st.session_state.monitorando
 
-# 4. Interface Lateral
+#Interface Lateral
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2885/2885412.png", width=100)
 st.sidebar.title("Configurações do IDS")
 st.sidebar.markdown("Sistema Preditivo de Ataques Cibernéticos utilizando Deep Learning.")
@@ -89,15 +80,12 @@ st.sidebar.markdown("---")
 
 velocidade = st.sidebar.slider("Velocidade da Simulação (Segundos)", 0.1, 2.0, 0.5)
 
-rotulo_botao = "⏹ PARAR MONITORAMENTO" if st.session_state.monitorando else "▶ INICIAR / CONTINUAR"
+rotulo_botao = "PARAR MONITORAMENTO" if st.session_state.monitorando else "INICIAR MONITORAMENTO"
 st.sidebar.button(rotulo_botao, on_click=alternar_monitoramento)
-
-# 1. Criamos um espaço reservado na barra lateral especificamente para este botão
 espaco_botao_zerar = st.sidebar.empty()
 
-# 2. Desenhamos o botão nele OU mandamos apagar tudo o que tem dentro
 if not st.session_state.monitorando and st.session_state.indice_atual > 0:
-    if espaco_botao_zerar.button("🔄 ZERAR SIMULAÇÃO"):
+    if espaco_botao_zerar.button("ZERAR SIMULAÇÃO"):
         st.session_state.monitorando = False
         st.session_state.indice_atual = 0
         st.session_state.total_pacotes = 0
@@ -111,12 +99,10 @@ if not st.session_state.monitorando and st.session_state.indice_atual > 0:
         else:
             st.experimental_rerun()
 else:
-    # A MÁGICA: Força o Streamlit a destruir o botão fantasma imediatamente 
-    # antes de prender o sistema no laço de repetição do monitoramento.
     espaco_botao_zerar.empty() 
 
-# 5. Construção da Tela Principal
-st.title("🛡️ Centro de Operações de Segurança (SOC)")
+#Tela Principal
+st.title("Centro de Operações de Segurança")
 st.markdown("Monitoramento de Tráfego de Rede em Tempo Real")
 st.markdown("""
 <style>
@@ -163,19 +149,14 @@ grafico_rosca = col_graf2.empty()
 
 st.markdown("---")
 painel_status = st.empty()
-titulo_historico = st.empty() # Criamos um espaço invisível para o título
+titulo_historico = st.empty()
 tabela_espaco = st.empty()
 
-# 6. O Motor da Simulação Resiliente
+#Motor da Simulação
 if st.session_state.monitorando:
     df_original, X_scaled, y_real = carregar_dados()
-    
-    # Recebemos o modelo, o mapa (grafo) e a chave do cofre (sessao)
     modelo, grafo, sessao = carregar_modelo(X_scaled.shape[1])
-    
-    alerta_espaco.info("Conectado ao Switch Core. Analisando pacotes de rede...")
-
-    # O título só é injetado na tela aqui, quando a simulação começa a rodar
+    alerta_espaco.info("Conectado ao Switch Core. Analisando pacotes de rede.")
     titulo_historico.subheader("Histórico de Pacotes")
 
     while st.session_state.indice_atual < len(X_scaled):
@@ -188,7 +169,6 @@ if st.session_state.monitorando:
         pacote_atual = X_scaled[i:i+1]
         dados_originais = df_original.iloc[[i]].copy()
         
-        # A MÁGICA DEFINITIVA: Obrigamos a usar o mapa E o cofre corretos!
         with grafo.as_default():
             tf.compat.v1.keras.backend.set_session(sessao)
             probabilidade = modelo.predict(pacote_atual)[0][0]
@@ -199,24 +179,24 @@ if st.session_state.monitorando:
         st.session_state.total_pacotes += 1
         if previsao == 0:
             st.session_state.total_normais += 1
-            status = "🟢 NORMAL"
+            status = "NORMAL"
         else:
             st.session_state.total_ataques += 1
-            status = "🔴 ATAQUE DETECTADO"
+            status = "ATAQUE DETECTADO"
             
-            # Tenta puxar a porta real do CSV, se não achar, sorteia uma comum
+            #Tenta puxar a porta real do CSV e se não achar sorteia uma comum
             if 'Destination Port' in dados_originais.columns:
                 porta_alvo = int(dados_originais['Destination Port'].values[0])
             else:
                 porta_alvo = random.choice([80, 443, 22, 21, 3389])
                 
-            # Gera IPs simulados (Origem externa maliciosa e Destino interno corporativo)
+            #Gera IPs simulados pra origem e destino
             ip_externo = f"{random.randint(11, 220)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
             ip_interno = f"10.0.0.{random.randint(10, 250)}"
             
-            # Monta a notificação no formato SIEM Profissional
+            #Notificação de ataque detectado
             mensagem_html = (
-                f"🚨 <b>AMEAÇA INTERCEPTADA</b><br>"
+                f"<b>AMEAÇA INTERCEPTADA</b><br>"
                 f"<span style='font-size: 12px;'>"
                 f"<b>Origem:</b> {ip_externo} &rarr; <b>Alvo:</b> {ip_interno}:{porta_alvo}<br>"
                 f"<b>Confiança IA:</b> {probabilidade*100:.2f}% | <b>Ação:</b> IP Bloqueado"
@@ -233,7 +213,6 @@ if st.session_state.monitorando:
         
         st.session_state.historico = pd.concat([dados_originais, st.session_state.historico]).head(8)
         
-        # --- ATUALIZAÇÃO VISUAL ---
         kpi_pacotes.metric("Pacotes Analisados", st.session_state.total_pacotes)
         kpi_normais.metric("Tráfego Normal", st.session_state.total_normais)
         kpi_ataques.metric("Ameaças Bloqueadas", st.session_state.total_ataques)
@@ -264,43 +243,34 @@ if st.session_state.monitorando:
         colunas_display = list(st.session_state.historico.columns[:3]) + ['Confiança IA', 'Status IDS']
         tabela_espaco.dataframe(st.session_state.historico[colunas_display], use_container_width=True)
 
-        # --- MOTOR GRÁFICO DO POP-UP SUPERIOR DIREITO ---
+        #Popup de alerta
         tempo_agora = time.time()
-        # Filtra a lista: apaga da memória os alertas mais velhos que 5 segundos
         st.session_state.alertas = [a for a in st.session_state.alertas if tempo_agora - a['time'] < 5.0]
         
         if len(st.session_state.alertas) > 0:
             html_alertas = "<div class='caixa-alertas'>"
-            # Empilha um aviso embaixo do outro
             for alerta in st.session_state.alertas:
                 html_alertas += f"<div class='alerta-item'>{alerta['msg']}</div>"
             html_alertas += "</div>"
             
-            # Injeta apenas o HTML na tela
             espaco_notificacoes.markdown(html_alertas, unsafe_allow_html=True)
         else:
-            # Se não tiver alertas, limpa a tela (efeito desaparecer)
             espaco_notificacoes.empty()
         
         st.session_state.indice_atual += 1
         time.sleep(velocidade)
         
 elif st.session_state.indice_atual > 0:
-    # ESTADO 3: PAUSADO
+    #Tela de sistema pausado
     kpi_pacotes.metric("Pacotes Analisados", st.session_state.total_pacotes)
     kpi_normais.metric("Tráfego Normal", st.session_state.total_normais)
     kpi_ataques.metric("Ameaças Bloqueadas", st.session_state.total_ataques)
-    alerta_espaco.empty() # Limpa alertas vermelhos pendentes no topo
-    
-    # Mensagem descritiva de pausa
-    painel_status.info("⏸️ **Inspeção de Tráfego Suspensa.** \n\nO motor de inferência da Inteligência Artificial foi pausado pelo operador. As métricas e os dados da sessão estão preservados em memória.\n\n* Clique em **INICIAR / CONTINUAR** no painel lateral para retomar a análise a partir do último pacote verificado.\n* Clique em **ZERAR SIMULAÇÃO** para expurgar a memória e reiniciar a operação a partir da estaca zero.")
-    
-    # Mantém a tabela congelada na tela para visualização da banca
+    alerta_espaco.empty()
+    painel_status.info("**Inspeção de Tráfego Suspensa.** \n\nO Detector foi pausado pelo operador. Dados da sessão estão preservados em memória.\n\n* Clique em **INICIAR MONITORAMENTO** no painel lateral para retomar a análise a partir do último pacote verificado.\n* Clique em **ZERAR SIMULAÇÃO** para limpar a memória e reiniciar a operação.")
     titulo_historico.subheader("Histórico de Pacotes (Modo Leitura)")
     colunas_display = list(st.session_state.historico.columns[:3]) + ['Confiança IA', 'Status IDS']
     tabela_espaco.dataframe(st.session_state.historico[colunas_display], use_container_width=True)
 
 else:
-    # ESTADO 1: INICIAL (Abriu o site agora ou clicou em Zerar)
-    # Mensagem de apresentação técnica
-    painel_status.success("🛡️ **Módulo de Detecção Preditiva Pronto.** \n\nA infraestrutura de Deep Learning foi inicializada com sucesso e os pesos neurais estão estabilizados. O sistema encontra-se em modo *standby*.\n\n👉 Clique em **INICIAR MONITORAMENTO** no menu lateral para acoplar o sistema ao fluxo de rede e iniciar a inferência dos pacotes em tempo real.")
+    #Tela inicial do sistema
+    painel_status.success("**Módulo de Detecção Preditiva Pronto.** \n\nDetector inicializado com sucesso. O sistema encontra-se em modo de espera.\n\nClique em **INICIAR MONITORAMENTO** no menu lateral para iniciar a análise dos pacotes em tempo real.")
