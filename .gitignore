@@ -1,0 +1,30 @@
+# === Bloqueio de Dados ===
+*.csv
+*.zip
+*.parquet
+*.h5
+*.keras
+
+data/*
+!data/.gitkeep
+!data/processed/
+!data/processed/pacotes_para_apresentacao.csv
+!modelo_tcc.h5
+
+# === Arquivos de Cache do Python e Jupyter ===
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# === Arquivos Gerados pelo Apache Spark ===
+spark-warehouse/
+derby.log
+metastore_db/
+
+# === Ambientes Virtuais e Configurações de IDE ===
+.conda/
+.vscode/
+.env
+
+# === Arquivos do Windows ===
+Thumbs.db
